@@ -1,10 +1,11 @@
 # -*- coding: iso-8859-1 -*-
+import logging
 import string
 import types
-import logging
 import unicodedata
-from generic import PrinterInterface, PrinterException
+
 import driver
+from generic import PrinterInterface, PrinterException
 
 
 class ValidationError(Exception):
