@@ -22,7 +22,7 @@ import cgi
 import time
 import os
 
-from controlador import ControladorFiscal
+from controller import PyFiscalPrinter
 
 # ejemplo para http://localhost:8000 :
 
@@ -54,13 +54,14 @@ window.onload = function() {
 </html>
 """
 
+
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if not self.path.startswith(("/", "/hola.js")):
             self.send_error(404, "File not found")
         else:
             if self.path == "/":
-                # muestro la página de ejemplo
+                # muestro la pagina de ejemplo
                 content = INDEX
                 content_type = "text/html"
             elif '?' in self.path:
@@ -68,19 +69,19 @@ class Handler(BaseHTTPRequestHandler):
                 path, tmp = self.path.split('?', 1)
                 method, ext = os.path.splitext(path[1:])
                 qs = cgi.parse_qs(tmp)
-                # obtengo la función a llamar
+                # obtengo la funcion a llamar
                 fn = getattr(self.server.controlador, method) 
                 callback = qs['callback'].pop()
                 kwargs = dict([(k, v[0]) for k, v in qs.items() if v])
-                # ejecuto el método del controlador
+                # ejecuto el metodo del controlador
                 ret = fn(**kwargs)
-                # reviso el valor devuelto (limpio si es excepción):
+                # reviso el valor devuelto (limpio si es excepcion):
                 ex = self.server.controlador.Excepcion
                 if ex:
                     ex = ex.replace('"', "").replace("'", "").replace("\n", "")
                     if isinstance(ex, str):
                         ex = ex.decode("ascii", "replace")
-                    # devuelvo JS que muestre la excepción:
+                    # devuelvo JS que muestre la excepcion:
                     content = """alert("%s");""" % (ex.encode("ascii", "replace"))
                 else:
                     if ret is None:
@@ -93,7 +94,7 @@ class Handler(BaseHTTPRequestHandler):
                 # prueba simple:
                 content_type = "application/javascript"
                 content = """alert("hola mundo %s!");""" % time.time()
-            # envío la respuesta (no cachear y compatibilidad con IE 8):
+            # envio la respuesta (no cachear y compatibilidad con IE 8):
             self.send_response(200)
             self.send_header("Content-type", content_type)
             self.send_header("X-UA-Compatible", "IE=8")
@@ -105,6 +106,6 @@ class Handler(BaseHTTPRequestHandler):
 
 # levanto el servidor local:
 server = HTTPServer(("localhost", 8000), Handler)
-server.controlador = ControladorFiscal()
+server.controller = PyFiscalPrinter()
 server.serve_forever()
 

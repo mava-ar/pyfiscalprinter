@@ -3,8 +3,8 @@ import string
 import types
 import logging
 import unicodedata
-from fiscalGeneric import PrinterInterface, PrinterException
-import epsonFiscalDriver
+from generic import PrinterInterface, PrinterException
+import driver
 
 
 class ValidationError(Exception):
@@ -141,13 +141,13 @@ class HasarPrinter(PrinterInterface):
                 self.driver = DummyDriver()
             elif host:
                 if connectOnEveryCommand:
-                    self.driver = epsonFiscalDriver.EpsonFiscalDriverProxy(host, port,
-                        connectOnEveryCommand=True)
+                    self.driver = driver.EpsonFiscalDriverProxy(host, port,
+                                                                connectOnEveryCommand=True)
                 else:
-                    self.driver = epsonFiscalDriver.EpsonFiscalDriverProxy(host, port)
+                    self.driver = driver.EpsonFiscalDriverProxy(host, port)
             else:
                 deviceFile = deviceFile or 0
-                self.driver = epsonFiscalDriver.HasarFiscalDriver(deviceFile, speed)
+                self.driver = driver.HasarFiscalDriver(deviceFile, speed)
         except Exception, e:
             raise FiscalPrinterError("Imposible establecer comunicación.", e)
         self.model = model
@@ -160,7 +160,7 @@ class HasarPrinter(PrinterInterface):
             ret = self.driver.sendCommand(commandNumber, parameters, skipStatusErrors)
             logging.getLogger().info("reply: %s" % ret)
             return ret
-        except epsonFiscalDriver.PrinterException, e:
+        except driver.PrinterException, e:
             logging.getLogger().error("epsonFiscalDriver.PrinterException: %s" % str(e))
             raise PrinterException("Error de la impresora fiscal: %s.\nComando enviado: %s" % \
                 (str(e), commandString))

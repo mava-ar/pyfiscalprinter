@@ -61,8 +61,8 @@ from functools import wraps
 
 # Drivers:
 
-from epsonFiscal import EpsonPrinter
-from hasarPrinter import HasarPrinter
+from epson import EpsonPrinter
+from hasar import HasarPrinter
 
 
 try:
