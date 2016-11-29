@@ -1,7 +1,9 @@
 # -*- coding: iso-8859-1 -*-
 
+
 class PrinterException(RuntimeError):
     pass
+
 
 class PrinterInterface:
     """Interfaz que deben cumplir las impresoras fiscales."""
@@ -16,7 +18,7 @@ class PrinterInterface:
         """Imprime texto fiscal. Si supera el límite de la linea se trunca."""
         raise NotImplementedError
 
-    NON_FISCAL_TEXT_MAX_LENGTH = 40 # Redefinir
+    NON_FISCAL_TEXT_MAX_LENGTH = 40  # Redefinir
 
     def closeDocument(self):
         """Cierra el documento que esté abierto"""
@@ -199,3 +201,7 @@ class PrinterInterface:
     def openDrawer(self):
         """Abrir cajón del dinero - No es mandatory implementarlo"""
         pass
+
+    def getSubtotal(self, print_subtotal=True):
+        """Toma el subtotal, usado para obtener la información que fue enviada a la FC"""
+        raise NotImplementedError

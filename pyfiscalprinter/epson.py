@@ -45,11 +45,7 @@ class DummyDriver:
         pass
 
     def sendCommand(self, commandNumber, parameters, skipStatusErrors):
-        ##raise RuntimeError("saraza1")
-##        if commandNumber in EpsonPrinter.CMD_CLOSE_FISCAL_RECEIPT:
-##            #raise RuntimeError("saraza")
-##        else:
-##            pass
+
         return ["00", "00", "", "", str(self.number), "", str(self.number)] + [str(self.number)] * 11
 
 
@@ -58,7 +54,7 @@ class EpsonPrinter(PrinterInterface):
 
     CMD_OPEN_FISCAL_RECEIPT = 0x40
     CMD_OPEN_BILL_TICKET = 0x60
-##    CMD_PRINT_TEXT_IN_FISCAL = (0x41, 0x61)
+    # CMD_PRINT_TEXT_IN_FISCAL = (0x41, 0x61)
     CMD_PRINT_TEXT_IN_FISCAL = 0x41
     CMD_PRINT_LINE_ITEM = (0x42, 0x62)
     CMD_PRINT_SUBTOTAL = (0x43, 0x63)
@@ -91,8 +87,7 @@ class EpsonPrinter(PrinterInterface):
             else:
                 deviceFile = deviceFile or 0
                 self.driver = driver.EpsonFiscalDriver(deviceFile, speed)
-            #self.driver = FileDriver( "/home/gnarvaja/Desktop/fiscal.txt" )
-        except Exception, e:
+        except Exception as e:
             raise FiscalPrinterError("Imposible establecer comunicación.", e)
         if not model:
             self.model = "tickeadoras"
@@ -355,7 +350,8 @@ class EpsonPrinter(PrinterInterface):
     def getLastNumber(self, letter):
         reply = self._sendCommand(self.CMD_STATUS_REQUEST, ["A"], True)
         if len(reply) < 3:
-# La respuesta no es válida. Vuelvo a hacer el pedido y si hay algún error que se reporte como excepción
+            # La respuesta no es válida. Vuelvo a hacer el pedido y si hay
+            # algún error que se reporte como excepción
             reply = self._sendCommand(self.CMD_STATUS_REQUEST, ["A"], False)
         if letter == "A":
             return int(reply[6])
@@ -365,7 +361,8 @@ class EpsonPrinter(PrinterInterface):
     def getLastCreditNoteNumber(self, letter):
         reply = self._sendCommand(self.CMD_STATUS_REQUEST, ["A"], True)
         if len(reply) < 3:
-# La respuesta no es válida. Vuelvo a hacer el pedido y si hay algún error que se reporte como excepción
+            # La respuesta no es válida. Vuelvo a hacer el pedido y si hay algún
+            # error que se reporte como excepción
             reply = self._sendCommand(self.CMD_STATUS_REQUEST, ["A"], False)
         if letter == "A":
             return int(reply[10])
@@ -389,6 +386,28 @@ class EpsonPrinter(PrinterInterface):
         except:
             pass
         return False
+
+    def getSubtotal(self, print_subtotal=True):
+        """
+        01  Estado del impresor fiscal
+        02  Estado del controlador fiscal
+        03  Sin uso
+        04  cantidad de items de línea
+        05  Total de mercadería o total a pagar (nnnnn.nn)
+        06  Total de impuesto IVA (nnnnnnnnnn.nn)
+        07  Total pago (nnnnnnnnnn.nn)
+        08  Total de Impuestos Internos Porcentuales (nnnnnnnnnn.nn)
+        09  Total de Impuestos Internos Fijos (nnnnnnnnnn.nn)
+        10  Monto Neto o Total facturado sin Impuestos (nnnnnnnnnn.nn)
+        """
+        print_subtotal = "P" if print_subtotal is True else "N"
+        reply = self._sendCommand(self.CMD_PRINT_SUBTOTAL[self._getCommandIndex()], [print_subtotal, "Subtotal"], True)
+
+        if len(reply) < 3:
+            # La respuesta no es válida. Vuelvo a hacer el pedido y
+            #  si hay algún error que se reporte como excepción
+            reply = self._sendCommand(self.CMD_PRINT_SUBTOTAL[self._getCommandIndex()], [print_subtotal, "Subtotal"], False)
+        return reply[3:]  # datos útiles
 
     def getWarnings(self):
         ret = []

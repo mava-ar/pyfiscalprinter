@@ -135,6 +135,7 @@ class HasarPrinter(PrinterInterface):
                  'receiptText': 106,
                 }
         }
+
     def __init__(self, deviceFile=None, speed=9600, host=None, port=None, model="615", dummy=False,
                  connectOnEveryCommand=False):
         try:
@@ -480,6 +481,16 @@ class HasarPrinter(PrinterInterface):
         except:
             pass
         return False
+
+    def getSubtotal(self, print_subtotal=True):
+        print_subtotal = "P" if print_subtotal is True else "N"
+        reply = self._sendCommand(self.CMD_PRINT_SUBTOTAL, [print_subtotal, "Subtotal"], True)
+
+        if len(reply) < 3:
+            # La respuesta no es válida. Vuelvo a hacer el pedido y
+            #  si hay algún error que se reporte como excepción
+            reply = self._sendCommand(self.CMD_PRINT_SUBTOTAL, [print_subtotal, "Subtotal"], False)
+        return reply[2:]
 
     def getWarnings(self):
         ret = []
