@@ -272,8 +272,6 @@ class EpsonPrinter(PrinterInterface):
         raise NotImplementedError
 
     def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False):
-        if type(description) in types.StringTypes:
-            description = [description]
         if negative:
             sign = 'R'
         else:
@@ -294,8 +292,13 @@ class EpsonPrinter(PrinterInterface):
                 # enviar sin el iva (factura A)
                 priceUnitStr = str(int(round((price / ((100 + iva) / 100)) * 100, 0)))
         ivaStr = str(int(iva * 100))
-        extraparams = self._currentDocument in (self.CURRENT_DOC_BILL_TICKET,
-            self.CURRENT_DOC_CREDIT_TICKET) and ["", "", ""] or []
+        description = self.truncate_description(description)
+
+        if self._currentDocument in (self.CURRENT_DOC_BILL_TICKET, self.CURRENT_DOC_CREDIT_TICKET):
+            extraparams = self.get_extraparameters(description)
+        else:
+            extraparams = []
+
         if self._getCommandIndex() == 0:
             for d in description[:-1]:
                 self._sendCommand(self.CMD_PRINT_TEXT_IN_FISCAL,
@@ -429,3 +432,29 @@ class EpsonPrinter(PrinterInterface):
     def close(self):
         self.driver.close()
         self.driver = None
+
+    def truncate_description(self, product_name):
+        """
+        divide la descripcion en array de 20 strings
+        """
+        text = formatText(product_name[:80])
+        n = 20
+        description = [text[i:i+n] for i in range(0, len(text), n)]
+
+        return description
+
+    def get_extraparameters(self, description):
+        """
+        """
+        if len(description) == 1:
+            extraparamenters = ['', '', '']
+        elif len(description) == 2:
+            extraparamenters = ['', '', description[0][:-2]]
+        elif len(description) == 3:
+            extraparamenters = ['', description[0][:-2], description[1]]
+        elif len(description) == 4:
+            extraparamenters = [description[0][:-2], description[1], description[2]]
+        else:
+            extraparamenters = ['', '', '']
+
+        return extraparamenters
