@@ -435,16 +435,17 @@ class EpsonPrinter(PrinterInterface):
 
     def truncate_description(self, product_name):
         """
-        divide la descripcion en array de 20 strings
+        Divide la descripción en array de n strings
         """
-        text = formatText(product_name[:80])
-        n = 20
+        text = formatText(product_name[:98])
+        n = 26
         description = [text[i:i+n] for i in range(0, len(text), n)]
 
         return description
 
     def get_extraparameters(self, description):
         """
+        Prepara el array de parámetros extras
         """
         if len(description) == 1:
             extraparamenters = ['', '', '']
