@@ -191,6 +191,24 @@ class PrinterInterface:
         """
         raise NotImplementedError
 
+    def auditByDate(self, date_from, date_to, type):
+        """Auditoría por rango de fechas
+            @param date_from    Fecha de inicio de selección AAMMDD
+            @param date_to      Fecha de fin de selección AAMMDD
+            @param type         'T' (Reporte de Contador resumido), 'D' (Reporte de Contador con detalles),
+                                't' (Informe de Auditoría resumido), 'd' (Informe de Auditoría con detalles)
+        """
+        raise NotImplementedError
+
+    def auditByClosure(self, close_from, close_to, type):
+        """Auditoría por rango de comprobantes de cierre
+            @param close_from    Número de Cierre 'Z' inicial del rango elegido.
+            @param close_to      Número de Cierre 'Z' final del rango elegido.
+            @param type         'T' (Reporte de Contador resumido), 'D' (Reporte de Contador con detalles),
+                                't' (Informe de Auditoría resumido), 'd' (Informe de Auditoría con detalles)
+        """
+        raise NotImplementedError
+
     def close(self):
         """Cierra la impresora"""
         raise NotImplementedError

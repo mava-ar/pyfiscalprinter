@@ -219,15 +219,16 @@ class PyFiscalPrinter(Object):
 
     @inicializar_y_capturar_excepciones
     @method(DBUS_IFACE, in_signature='vvvv', out_signature='b')
-    def ImprimirItem(self, ds, qty, importe, alic_iva=21.):
+    def ImprimirItem(self, ds, qty, importe, alic_iva=21., descripcion_larga=False):
         "Envia un item (descripcion, cantidad, etc.) a una factura"
-        self.factura["items"].append(dict(ds=ds, qty=qty, 
-                                          importe=importe, alic_iva=alic_iva))
+        self.factura["items"].append(dict(ds=ds, qty=qty,
+                                          importe=importe, alic_iva=alic_iva,
+                                          descripcion_larga=descripcion_larga))
         ##ds = unicode(ds, "latin1") # convierto a latin1
         # Nota: no se calcula neto, iva, etc (deben venir calculados!)
-        discount = discountDescription =  None
-        self.printer.addItem(ds, float(qty), float(importe), float(alic_iva), 
-                                    discount, discountDescription)
+        discount = discountDescription = None
+        self.printer.addItem(ds, float(qty), float(importe), float(alic_iva),
+                             discount, discountDescription, descripcion_larga)
         return True
 
     @inicializar_y_capturar_excepciones

@@ -63,6 +63,9 @@ class EpsonPrinter(PrinterInterface):
     CMD_DAILY_CLOSE = 0x39
     CMD_STATUS_REQUEST = 0x2a
 
+    CMD_AUDIT_BY_DATE = 0x3A
+    CMD_AUDIT_BY_CLOSURE = 0x3B
+
     CMD_OPEN_DRAWER = 0x7b
 
     CMD_SET_HEADER_TRAILER = 0x5d
@@ -271,7 +274,8 @@ class EpsonPrinter(PrinterInterface):
             return self.closeDocument()
         raise NotImplementedError
 
-    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False):
+    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False,
+                long_description=False):
         if negative:
             sign = 'R'
         else:
@@ -292,12 +296,19 @@ class EpsonPrinter(PrinterInterface):
                 # enviar sin el iva (factura A)
                 priceUnitStr = str(int(round((price / ((100 + iva) / 100)) * 100, 0)))
         ivaStr = str(int(iva * 100))
-        description = self.truncate_description(description)
+        if long_description:
+            description = self.truncate_description(description)
+        else:
+            if type(description) in types.StringTypes:
+                description = [description]
 
         if self._currentDocument in (self.CURRENT_DOC_BILL_TICKET, self.CURRENT_DOC_CREDIT_TICKET):
-            extraparams = self.get_extraparameters(description)
+            if long_description :
+                extra_parameters = self.get_extraparameters(description)
+            else:
+                extra_parameters = ["", "", ""]
         else:
-            extraparams = []
+            extra_parameters = []
 
         if self._getCommandIndex() == 0:
             for d in description[:-1]:
@@ -305,12 +316,12 @@ class EpsonPrinter(PrinterInterface):
                                    [formatText(d)[:20]])
         reply = self._sendCommand(self.CMD_PRINT_LINE_ITEM[self._getCommandIndex()],
                           [formatText(description[-1][:20]),
-                            quantityStr, priceUnitStr, ivaStr, sign, bultosStr, "0" * 8] + extraparams)
+                            quantityStr, priceUnitStr, ivaStr, sign, bultosStr, "0" * 8] + extra_parameters)
         if discount:
             discountStr = str(int(discount * 100))
             self._sendCommand(self.CMD_PRINT_LINE_ITEM[self._getCommandIndex()],
                 [formatText(discountDescription[:20]), "1000",
-                  discountStr, ivaStr, 'R', "0", "0"] + extraparams)
+                  discountStr, ivaStr, 'R', "0", "0"] + extra_parameters)
         return reply
 
     def addPayment(self, description, payment):
@@ -348,6 +359,14 @@ class EpsonPrinter(PrinterInterface):
 
     def dailyClose(self, type):
         reply = self._sendCommand(self.CMD_DAILY_CLOSE, [type, "P"])
+        return reply[2:]
+
+    def auditByDate(self, date_from, date_to, type):
+        reply = self._sendCommand(self.CMD_AUDIT_BY_DATE, [date_from, date_to, type])
+        return reply[2:]
+
+    def auditByClosure(self, close_from, close_to, type):
+        reply = self._sendCommand(self.CMD_AUDIT_BY_CLOSURE, [close_from, close_to, type])
         return reply[2:]
 
     def getLastNumber(self, letter):
