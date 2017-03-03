@@ -28,16 +28,18 @@ class PrinterInterface:
         """Cancela el documento que esté abierto"""
         raise NotImplementedError
 
-    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False):
+    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False,
+                long_description=False):
         """Agrega un item a la FC.
             @param description          Descripción del item. Puede ser un string o una lista.
                 Si es una lista cada valor va en una línea.
             @param quantity             Cantidad
             @param price                Precio (incluye el iva si la FC es B o C, si es A no lo incluye)
             @param iva                  Porcentaje de iva
-            @param negative             True->Resta de la FC
             @param discount             Importe de descuento
             @param discountDescription  Descripción del descuento
+            @param negative             True->Resta de la FC
+            @param long_description     Descripción hasta 78 caracteres
         """
         raise NotImplementedError
 

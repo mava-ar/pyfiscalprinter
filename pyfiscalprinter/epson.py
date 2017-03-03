@@ -305,6 +305,7 @@ class EpsonPrinter(PrinterInterface):
         if self._currentDocument in (self.CURRENT_DOC_BILL_TICKET, self.CURRENT_DOC_CREDIT_TICKET):
             if long_description :
                 extra_parameters = self.get_extraparameters(description)
+                description = '-'
             else:
                 extra_parameters = ["", "", ""]
         else:
@@ -456,7 +457,7 @@ class EpsonPrinter(PrinterInterface):
         """
         Divide la descripción en array de n strings
         """
-        text = formatText(product_name[:98])
+        text = formatText(product_name[:78])
         n = 26
         description = [text[i:i+n] for i in range(0, len(text), n)]
 
@@ -466,15 +467,11 @@ class EpsonPrinter(PrinterInterface):
         """
         Prepara el array de parámetros extras
         """
-        if len(description) == 1:
-            extraparamenters = ['', '', '']
-        elif len(description) == 2:
-            extraparamenters = ['', '', description[0]]
-        elif len(description) == 3:
-            extraparamenters = ['', description[0], description[1]]
-        elif len(description) == 4:
-            extraparamenters = [description[0], description[1], description[2]]
-        else:
-            extraparamenters = ['', '', '']
+
+        extraparamenters = ['', '', '']
+
+        for d in description:
+            extraparamenters.append(d)
+            extraparamenters = extraparamenters[1:]
 
         return extraparamenters

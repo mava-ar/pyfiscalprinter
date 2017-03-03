@@ -357,7 +357,8 @@ class HasarPrinter(PrinterInterface):
             return status
         raise NotImplementedError
 
-    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False):
+    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False,
+                long_description=False):
         if type(description) in types.StringTypes:
             description = [description]
         if negative:
