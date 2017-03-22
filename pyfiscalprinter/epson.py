@@ -6,6 +6,7 @@ import unicodedata
 
 import driver
 from generic import PrinterInterface, PrinterException
+from math import ceil
 
 
 class FiscalPrinterError(Exception):
@@ -275,7 +276,7 @@ class EpsonPrinter(PrinterInterface):
         raise NotImplementedError
 
     def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False,
-                long_description=False):
+                long_description=False, round_up=False):
         if negative:
             sign = 'R'
         else:
@@ -289,12 +290,15 @@ class EpsonPrinter(PrinterInterface):
             # enviar con el iva incluido
             priceUnitStr = str(int(round(price * 100, 0)))
         else:
+            net = price / ((100.0 + iva) / 100.0)
+            if round_up:
+                net = self.float_round_up(net, 2)
             if self.model == "tm-220-af":
                 # enviar sin el iva (factura A)
-                priceUnitStr =  "%0.4f" % (price / ((100.0 + iva) / 100.0))
+                priceUnitStr = "%0.4f" % net
             else:
                 # enviar sin el iva (factura A)
-                priceUnitStr = str(int(round((price / ((100 + iva) / 100)) * 100, 0)))
+                priceUnitStr = str(int(round(net * 100, 0)))
         ivaStr = str(int(iva * 100))
         if long_description:
             description = self.truncate_description(description)
@@ -475,3 +479,6 @@ class EpsonPrinter(PrinterInterface):
             extraparamenters = extraparamenters[1:]
 
         return extraparamenters
+
+    def float_round_up(self, num, places = 0):
+        return ceil(num * (10**places)) / float(10**places)

@@ -29,7 +29,7 @@ class PrinterInterface:
         raise NotImplementedError
 
     def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False,
-                long_description=False):
+                long_description=False, round_up=False):
         """Agrega un item a la FC.
             @param description          Descripción del item. Puede ser un string o una lista.
                 Si es una lista cada valor va en una línea.
@@ -40,6 +40,8 @@ class PrinterInterface:
             @param discountDescription  Descripción del descuento
             @param negative             True->Resta de la FC
             @param long_description     Descripción hasta 78 caracteres
+            @param round_up             Corrige el error por redondeo, haciendolo hacía arriba y
+                bonificando la diferencia
         """
         raise NotImplementedError
 

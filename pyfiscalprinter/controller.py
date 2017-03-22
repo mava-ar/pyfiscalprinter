@@ -220,7 +220,7 @@ class PyFiscalPrinter(Object):
 
     @inicializar_y_capturar_excepciones
     @method(DBUS_IFACE, in_signature='vvvv', out_signature='b')
-    def ImprimirItem(self, ds, qty, importe, alic_iva=21., descripcion_larga=False):
+    def ImprimirItem(self, ds, qty, importe, alic_iva=21., descripcion_larga=False, redondeo_hacia_arriba=False):
         "Envia un item (descripcion, cantidad, etc.) a una factura"
         self.factura["items"].append(dict(ds=ds, qty=qty,
                                           importe=importe, alic_iva=alic_iva))
@@ -229,7 +229,7 @@ class PyFiscalPrinter(Object):
         discount = discountDescription = None
         negative = False
         self.printer.addItem(ds, float(qty), float(importe), float(alic_iva),
-                             discount, discountDescription, negative, descripcion_larga)
+                             discount, discountDescription, negative, descripcion_larga, redondeo_hacia_arriba)
         return True
 
     @inicializar_y_capturar_excepciones
@@ -255,6 +255,12 @@ class PyFiscalPrinter(Object):
         cbte_fiscal = self.cbte_fiscal_map[int(tipo_cbte)]
         letra_cbte = cbte_fiscal[-1] if len(cbte_fiscal) > 1 else None
         return self.printer.getLastNumber(letra_cbte)
+
+    @inicializar_y_capturar_excepciones
+    @method(DBUS_IFACE, in_signature='', out_signature='')
+    def AgregarAdicional(self, descripcion, monto, iva, negativo=False):
+        "Agrega un adicional o Bonificacion"
+        return self.printer.addAdditional(descripcion, monto, iva, negativo)
 
 
 if __name__ == '__main__':

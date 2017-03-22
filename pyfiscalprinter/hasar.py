@@ -358,7 +358,7 @@ class HasarPrinter(PrinterInterface):
         raise NotImplementedError
 
     def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False,
-                long_description=False):
+                long_description=False, round_up=False):
         if negative:
             sign = 'm'
         else:
