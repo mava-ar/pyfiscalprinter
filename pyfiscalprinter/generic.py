@@ -28,16 +28,20 @@ class PrinterInterface:
         """Cancela el documento que esté abierto"""
         raise NotImplementedError
 
-    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False):
+    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False,
+                long_description=False, round_up=False):
         """Agrega un item a la FC.
             @param description          Descripción del item. Puede ser un string o una lista.
                 Si es una lista cada valor va en una línea.
             @param quantity             Cantidad
             @param price                Precio (incluye el iva si la FC es B o C, si es A no lo incluye)
             @param iva                  Porcentaje de iva
-            @param negative             True->Resta de la FC
             @param discount             Importe de descuento
             @param discountDescription  Descripción del descuento
+            @param negative             True->Resta de la FC
+            @param long_description     Descripción hasta 78 caracteres
+            @param round_up             Corrige el error por redondeo, haciendolo hacía arriba y
+                bonificando la diferencia
         """
         raise NotImplementedError
 
@@ -188,6 +192,24 @@ class PrinterInterface:
     def dailyClose(self, type):
         """Cierre Z (diario) o X (parcial)
             @param type     Z (diario), X (parcial)
+        """
+        raise NotImplementedError
+
+    def auditByDate(self, date_from, date_to, type):
+        """Auditoría por rango de fechas
+            @param date_from    Fecha de inicio de selección AAMMDD
+            @param date_to      Fecha de fin de selección AAMMDD
+            @param type         'T' (Reporte de Contador resumido), 'D' (Reporte de Contador con detalles),
+                                't' (Informe de Auditoría resumido), 'd' (Informe de Auditoría con detalles)
+        """
+        raise NotImplementedError
+
+    def auditByClosure(self, close_from, close_to, type):
+        """Auditoría por rango de comprobantes de cierre
+            @param close_from    Número de Cierre 'Z' inicial del rango elegido.
+            @param close_to      Número de Cierre 'Z' final del rango elegido.
+            @param type         'T' (Reporte de Contador resumido), 'D' (Reporte de Contador con detalles),
+                                't' (Informe de Auditoría resumido), 'd' (Informe de Auditoría con detalles)
         """
         raise NotImplementedError
 

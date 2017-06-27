@@ -6,6 +6,7 @@ import unicodedata
 
 import driver
 from generic import PrinterInterface, PrinterException
+from math import ceil
 
 
 class FiscalPrinterError(Exception):
@@ -62,6 +63,9 @@ class EpsonPrinter(PrinterInterface):
     CMD_CLOSE_FISCAL_RECEIPT = (0x45, 0x65)
     CMD_DAILY_CLOSE = 0x39
     CMD_STATUS_REQUEST = 0x2a
+
+    CMD_AUDIT_BY_DATE = 0x3A
+    CMD_AUDIT_BY_CLOSURE = 0x3B
 
     CMD_OPEN_DRAWER = 0x7b
 
@@ -271,9 +275,8 @@ class EpsonPrinter(PrinterInterface):
             return self.closeDocument()
         raise NotImplementedError
 
-    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False):
-        if type(description) in types.StringTypes:
-            description = [description]
+    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False,
+                long_description=False, round_up=False):
         if negative:
             sign = 'R'
         else:
@@ -287,27 +290,43 @@ class EpsonPrinter(PrinterInterface):
             # enviar con el iva incluido
             priceUnitStr = str(int(round(price * 100, 0)))
         else:
+            net = price / ((100.0 + iva) / 100.0)
+            if round_up:
+                net = self.float_round_up(net, 2)
             if self.model == "tm-220-af":
                 # enviar sin el iva (factura A)
-                priceUnitStr =  "%0.4f" % (price / ((100.0 + iva) / 100.0))
+                priceUnitStr = "%0.4f" % net
             else:
                 # enviar sin el iva (factura A)
-                priceUnitStr = str(int(round((price / ((100 + iva) / 100)) * 100, 0)))
+                priceUnitStr = str(int(round(net * 100, 0)))
         ivaStr = str(int(iva * 100))
-        extraparams = self._currentDocument in (self.CURRENT_DOC_BILL_TICKET,
-            self.CURRENT_DOC_CREDIT_TICKET) and ["", "", ""] or []
+        if long_description:
+            description = self.truncate_description(description)
+        else:
+            if type(description) in types.StringTypes:
+                description = [description]
+
+        if self._currentDocument in (self.CURRENT_DOC_BILL_TICKET, self.CURRENT_DOC_CREDIT_TICKET):
+            if long_description :
+                extra_parameters = self.get_extraparameters(description)
+                description = '-'
+            else:
+                extra_parameters = ["", "", ""]
+        else:
+            extra_parameters = []
+
         if self._getCommandIndex() == 0:
             for d in description[:-1]:
                 self._sendCommand(self.CMD_PRINT_TEXT_IN_FISCAL,
                                    [formatText(d)[:20]])
         reply = self._sendCommand(self.CMD_PRINT_LINE_ITEM[self._getCommandIndex()],
                           [formatText(description[-1][:20]),
-                            quantityStr, priceUnitStr, ivaStr, sign, bultosStr, "0" * 8] + extraparams)
+                            quantityStr, priceUnitStr, ivaStr, sign, bultosStr, "0" * 8] + extra_parameters)
         if discount:
             discountStr = str(int(discount * 100))
             self._sendCommand(self.CMD_PRINT_LINE_ITEM[self._getCommandIndex()],
                 [formatText(discountDescription[:20]), "1000",
-                  discountStr, ivaStr, 'R', "0", "0"] + extraparams)
+                  discountStr, ivaStr, 'R', "0", "0"] + extra_parameters)
         return reply
 
     def addPayment(self, description, payment):
@@ -345,6 +364,14 @@ class EpsonPrinter(PrinterInterface):
 
     def dailyClose(self, type):
         reply = self._sendCommand(self.CMD_DAILY_CLOSE, [type, "P"])
+        return reply[2:]
+
+    def auditByDate(self, date_from, date_to, type):
+        reply = self._sendCommand(self.CMD_AUDIT_BY_DATE, [date_from, date_to, type])
+        return reply[2:]
+
+    def auditByClosure(self, close_from, close_to, type):
+        reply = self._sendCommand(self.CMD_AUDIT_BY_CLOSURE, [close_from, close_to, type])
         return reply[2:]
 
     def getLastNumber(self, letter):
@@ -429,3 +456,29 @@ class EpsonPrinter(PrinterInterface):
     def close(self):
         self.driver.close()
         self.driver = None
+
+    def truncate_description(self, product_name):
+        """
+        Divide la descripción en array de n strings
+        """
+        text = formatText(product_name[:78])
+        n = 26
+        description = [text[i:i+n] for i in range(0, len(text), n)]
+
+        return description
+
+    def get_extraparameters(self, description):
+        """
+        Prepara el array de parámetros extras
+        """
+
+        extraparamenters = ['', '', '']
+
+        for d in description:
+            extraparamenters.append(d)
+            extraparamenters = extraparamenters[1:]
+
+        return extraparamenters
+
+    def float_round_up(self, num, places = 0):
+        return ceil(num * (10**places)) / float(10**places)

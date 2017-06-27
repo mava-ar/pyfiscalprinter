@@ -357,9 +357,8 @@ class HasarPrinter(PrinterInterface):
             return status
         raise NotImplementedError
 
-    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False):
-        if type(description) in types.StringTypes:
-            description = [description]
+    def addItem(self, description, quantity, price, iva, discount, discountDescription, negative=False,
+                long_description=False, round_up=False):
         if negative:
             sign = 'm'
         else:
@@ -368,6 +367,11 @@ class HasarPrinter(PrinterInterface):
         priceUnit = price
         priceUnitStr = str(priceUnit).replace(",", ".")
         ivaStr = str(float(iva)).replace(",", ".")
+        if long_description:
+            description = self.truncate_description(description)
+        else:
+            if type(description) in types.StringTypes:
+                description = [description]
         for d in description[:-1]:
             self._sendCommand(self.CMD_PRINT_TEXT_IN_FISCAL, [self._formatText(d, 'fiscalText'), "0"])
         reply = self._sendCommand(self.CMD_PRINT_LINE_ITEM,
@@ -512,3 +516,13 @@ class HasarPrinter(PrinterInterface):
     def close(self):
         self.driver.close()
         self.driver = None
+
+    def truncate_description(self, product_name):
+        """
+        Divide la descripción en array de n strings
+        """
+        text = formatText(product_name[:78])
+        n = 26
+        description = [text[i:i+n] for i in range(0, len(text), n)]
+
+        return description
